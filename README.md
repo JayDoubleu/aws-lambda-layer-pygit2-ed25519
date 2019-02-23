@@ -14,7 +14,7 @@ git checkout python2.7 or python3.6
 Build: 
 ```
 docker build  -t pygit2-lambda-layer .
-docker run -v $(pwd):/tmp/lambda_layer_ready -it pygit2 sh copy_zip.sh
+docker run -v $(pwd):/tmp/lambda_layer_ready -it pygit2-lambda-layer sh copy_zip.sh
 ```
 You should see pygit2_lambda_layer.zip in your current directory
 
