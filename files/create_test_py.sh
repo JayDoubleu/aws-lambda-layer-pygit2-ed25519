@@ -1,5 +1,5 @@
 cat <<EOF > pygit2_libs.py
-venv = '/opt/python/lib/python3.7/site-packages/'
+venv = '/opt/python/lib/python%%PYTHON_BINVER%%/site-packages/'
 from ctypes import *
 load_libffi = cdll.LoadLibrary (venv + '$(ls libffi*)')
 load_libhttp_parser = cdll.LoadLibrary (venv + '$(ls libhttp_parser*)')
