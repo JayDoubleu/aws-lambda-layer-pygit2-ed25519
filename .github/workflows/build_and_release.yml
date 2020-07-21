@@ -26,8 +26,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: devel/${{ matrix.python_versions }}
-        release_name: pygit2_lambda_layer - python ${{ matrix.python_versions }}
-        draft: true
+        release_name: pygit2_lambda_layer python ${{ matrix.python_versions }}
+        draft: false
         prerelease: true
 
     - name: Upload Release Asset
