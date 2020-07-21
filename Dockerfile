@@ -1,8 +1,11 @@
-FROM centos
+FROM centos:7
+
 # Install dependecies
 RUN yum -y install http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 RUN yum -y groupinstall 'Development Tools'
-RUN yum -y install libffi-devel libcurl-devel cmake autoreconf git curl http-parser-devel libgpg-error-devel zlib-devel perl-core lksctp-tools-devel zip
+RUN yum -y install libffi-devel libcurl-devel cmake autoreconf \
+        git curl http-parser-devel libgpg-error-devel zlib-devel \
+        perl-core lksctp-tools-devel zip
 # Compile OpenSSL 1.1.1 (ed25519 support)
 RUN curl -o /tmp/openssl.tar.gz https://www.openssl.org/source/openssl-1.1.1.tar.gz
 RUN tar -xvf /tmp/openssl.tar.gz -C /tmp/
@@ -49,17 +52,21 @@ RUN ldconfig -p|awk -F '=>' '{print $2}'|sed  "s/ //g"|grep libgnutls|grep \.so|
 RUN ldconfig -p|awk -F '=>' '{print $2}'|sed  "s/ //g"|grep libc\.so|grep \.so|while read i; do cp $i /tmp/static_libs/;done
 RUN ldconfig -p|awk -F '=>' '{print $2}'|sed  "s/ //g"|grep libfipschec|grep \.so|while read i; do cp $i /tmp/static_libs/;done
 
-# Install python 3.7
+# Install python
+ARG PYTHON_VERSION="3.8.0"
+ENV PYTHON_BINVER $(echo $PYTHON_VERSION | cut -d "." -f 1,2)
+
 RUN mkdir /tmp/python_build
 WORKDIR /tmp/python_build
-RUN curl -O  https://www.python.org/ftp/python/3.7.2/Python-3.7.2.tgz
-RUN tar -xvf Python-3.7.2.tgz
-RUN cd Python-3.7.2 && ./configure --enable-optimizations && make altinstall
-
+RUN curl -O  https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz
+RUN tar -xvf Python-${PYTHON_VERSION}.tgz
+RUN cd Python-${PYTHON_VERSION} && ./configure --enable-optimizations && make altinstall
 
 RUN mkdir /tmp/venv
 WORKDIR /tmp/venv
-RUN python3.7 -m venv .
+
+
+RUN eval python$PYTHON_BINVER -m venv .
 RUN source bin/activate && pip install pygit2
 RUN find . -name "libffi*"|grep \.so|while read i; do cp $i /tmp/static_libs/;done
 
@@ -67,16 +74,15 @@ WORKDIR /tmp/static_libs/
 ADD files/create_test_py.sh .
 RUN chmod +x create_test_py.sh && sh create_test_py.sh
 
-RUN mkdir -p /tmp/lambda_layer/python/lib/python3.7/site-packages/
+RUN eval mkdir -p /tmp/lambda_layer/python/lib/python$PYTHON_BINVER/site-packages/
 WORKDIR /tmp/lambda_layer
-RUN mv /tmp/venv/lib/python3.7/site-packages/* /tmp/lambda_layer/python/lib/python3.7/site-packages/
-RUN mv /tmp/static_libs/* /tmp/lambda_layer/python/lib/python3.7/site-packages/
-RUN rm -f python/lib/python3.7/site-packages/create_test_py.sh
+RUN eval mv /tmp/venv/lib/python$PYTHON_BINVER/site-packages/* /tmp/lambda_layer/python/lib/python$PYTHON_BINVER/site-packages/
+RUN eval mv /tmp/static_libs/* /tmp/lambda_layer/python/lib/python$PYTHON_BINVER/site-packages/
+RUN eval rm -f python/lib/python$PYTHON_BINVER/site-packages/create_test_py.sh
 RUN zip -r ../pygit2_lambda_layer.zip .
 
-FROM centos
+FROM centos:7
 WORKDIR "/tmp/lambda_layer"
 COPY --from=0 /tmp/pygit2_lambda_layer.zip .
-RUN ls
 ADD files/copy_zip.sh /bin/
 RUN chmod +x /bin/copy_zip.sh

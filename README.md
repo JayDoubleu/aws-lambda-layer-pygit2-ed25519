@@ -6,14 +6,11 @@ AWS Lambda layer with pre-compiled pygit2/libgit2 and ed25519 support.
 git clone https://github.com/JayDoubleu/aws-lambda-layer-pygit2-ed25519
 cd aws-lambda-layer-pygit2-ed25519
 ```
-master branch defaults to python3.7. If you require python2.7 or 3.6 run:
-```
-git checkout python2.7 or python3.6
-```
-
-Build: 
+Build:
 ```
 docker build  -t pygit2-lambda-layer .
+#docker build -t pygit2-lambda-layer . # defaults to "3.8.0" if no PYTHON_VERSION argument specified.
+docker build --build-arg PYTHON_VERSION="3.8.5" -t pygit2-lambda-layer .
 docker run -v $(pwd):/tmp/lambda_layer_ready -it pygit2-lambda-layer sh copy_zip.sh
 ```
 You should see pygit2_lambda_layer.zip in your current directory
